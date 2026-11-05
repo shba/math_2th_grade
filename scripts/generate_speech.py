@@ -15,6 +15,8 @@ non-commercial home app; a commercial build should use Azure Speech instead.
 import asyncio
 import hashlib
 import json
+import shutil
+import subprocess
 import sys
 from pathlib import Path
 
@@ -31,6 +33,33 @@ PHRASES = ROOT / "speech" / "phrases.json"
 OUT = ROOT / "public" / "audio" / "he"
 
 
+TAIL_KEEP_S = 0.15
+
+
+def trim_tail(path: Path) -> None:
+    """Drop the ~1 s of silence the voice service appends, without re-encoding.
+
+    Only whole MP3 frames at the end are removed (ffmpeg stream copy), so the
+    audio itself is untouched. Skipped when ffmpeg is not installed.
+    """
+    if not shutil.which("ffmpeg"):
+        return
+    pcm = subprocess.run(
+        ["ffmpeg", "-v", "error", "-i", str(path), "-f", "s16le", "-ac", "1", "-ar", "24000", "-"],
+        capture_output=True, check=True,
+    ).stdout
+    samples = memoryview(pcm).cast("h")
+    last = next((i for i in range(len(samples) - 1, -1, -1) if abs(samples[i]) > 130), None)
+    if last is None:
+        return
+    end = last / 24000 + TAIL_KEEP_S
+    if end >= len(samples) / 24000 - 0.05:
+        return
+    tmp = path.with_suffix(".trim.mp3")
+    subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", str(path), "-t", f"{end:.3f}", "-c", "copy", "-map_metadata", "-1", str(tmp)], check=True)
+    tmp.replace(path)
+
+
 def clip_id(text: str) -> str:
     return hashlib.sha1(f"{VOICE}|{RATE}|{PITCH}|{text}".encode()).hexdigest()[:16]
 
@@ -43,7 +72,7 @@ async def record(text: str, path: Path, sem: asyncio.Semaphore) -> None:
                 await edge_tts.Communicate(text, VOICE, rate=RATE, pitch=PITCH).save(str(tmp))
                 if tmp.stat().st_size < 500:
                     raise RuntimeError("empty audio")
-                tmp.rename(path)
+                trim_tail(tmp.rename(path))
                 return
             except Exception as e:  # noqa: BLE001 - network hiccups are retried
                 if attempt == RETRIES - 1:
@@ -59,6 +88,10 @@ async def main() -> int:
     todo = [(h, t) for h, t in say.items() if not (OUT / f"{h}.mp3").exists()]
     print(f"{len(say)} clips, {len(todo)} to record", flush=True)
 
+    if "--trim-all" in sys.argv:
+        for f in OUT.glob("*.mp3"):
+            trim_tail(f)
+
     sem = asyncio.Semaphore(CONCURRENCY)
     results = await asyncio.gather(*(record(t, OUT / f"{h}.mp3", sem) for h, t in todo), return_exceptions=True)
     failed = [r for r in results if isinstance(r, Exception)]
@@ -69,7 +102,7 @@ async def main() -> int:
     for f in OUT.glob("*.mp3"):
         if f.stem not in say:
             f.unlink()
-    for f in OUT.glob("*.part"):
+    for f in [*OUT.glob("*.part"), *OUT.glob("*.trim.mp3")]:
         f.unlink()
 
     manifest = {
