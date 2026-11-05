@@ -4,7 +4,8 @@ import { useApp } from '../app/AppContext'
 import { g } from '../content/he/text'
 import { getProgress } from '../data/repo'
 import { createRng } from '../exercises/rng'
-import { speak } from '../speech/speech'
+import { speak, speakQuestion } from '../speech/speech'
+import { SpeakButton } from '../components/SpeakButton'
 import { useGameRecorder } from './useGameRecorder'
 
 const ROUNDS = 5
@@ -55,7 +56,7 @@ export function CastleGame({ onEnd }: { onEnd: (score: number, total: number) =>
     setDone(false)
     setMsg('')
     firstTry.current = true
-    void speak(t(g(`בְּנִי טִירָה שֶׁל ${n}`, `בְּנֵה טִירָה שֶׁל ${n}`)))
+    void speakQuestion(t(g(`בְּנִי טִירָה שֶׁל ${n}`, `בְּנֵה טִירָה שֶׁל ${n}`)))
   }, [round, big, t])
 
   const value = parts.h * 100 + parts.t * 10 + parts.o
@@ -86,9 +87,12 @@ export function CastleGame({ onEnd }: { onEnd: (score: number, total: number) =>
   return (
     <div className="game castle-game">
       <div className="game-round">{round + 1} / {ROUNDS}</div>
-      <p className="target-number">
-        <bdi dir="ltr">{target}</bdi>
-      </p>
+      <div className="question-row">
+        <SpeakButton text={t(g(`בְּנִי טִירָה שֶׁל ${target}`, `בְּנֵה טִירָה שֶׁל ${target}`))} />
+        <p className="target-number">
+          <bdi dir="ltr">{target}</bdi>
+        </p>
+      </div>
       <Castle {...parts} done={done} />
       <div className="pv-table" dir="ltr" aria-live="polite">
         {big && <span><small>מֵאוֹת</small>{parts.h}</span>}

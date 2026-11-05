@@ -758,6 +758,14 @@ p {
   justify-content: center;
 }
 
+/* A question with its speaker button beside it (games). */
+.question-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+}
+
 .equation {
   display: inline-flex;
   flex-wrap: wrap;

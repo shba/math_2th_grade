@@ -8,7 +8,8 @@ import { numberChoices } from '../exercises/helpers'
 import { generateExercise } from '../exercises/registry'
 import { createRng } from '../exercises/rng'
 import type { Exercise, TopicId } from '../exercises/types'
-import { speak, tokensForSpeech } from '../speech/speech'
+import { speak, speakQuestion, tokensForSpeech } from '../speech/speech'
+import { SpeakButton } from '../components/SpeakButton'
 import { useGameRecorder } from './useGameRecorder'
 
 const ANIMALS = ['🐰', '🐻', '🦊', '🐼', '🐨', '🐷', '🐹', '🦄']
@@ -42,10 +43,12 @@ export function FeedGame({ topicId, onEnd }: { topicId: TopicId; onEnd: (score: 
   const apples = useMemo(() => numberChoices(ex.answers[0], rng.current), [ex])
   const animal = ANIMALS[round % ANIMALS.length]
 
+  const question = useMemo(() => ['אֵיזֶה תַּפּוּחַ לָתֵת לַחַיָּה?', tokensForSpeech(ex.tokens!)], [ex])
+
   useEffect(() => {
     firstTry.current = true
-    void speak(['אֵיזֶה תַּפּוּחַ לָתֵת לַחַיָּה?', tokensForSpeech(ex.tokens!)])
-  }, [ex])
+    void speakQuestion(question)
+  }, [question])
 
   const give = (v: number) => {
     if (fed !== null) return
@@ -79,6 +82,7 @@ export function FeedGame({ topicId, onEnd }: { topicId: TopicId; onEnd: (score: 
         <motion.span className="animal" aria-hidden animate={fed !== null ? { scale: [1, 1.25, 1], rotate: [0, -8, 8, 0] } : { y: [0, -6, 0] }} transition={fed !== null ? { duration: 0.6 } : { repeat: Infinity, duration: 2 }}>
           {animal}
         </motion.span>
+        <SpeakButton text={question} />
         <div className="feed-bubble">
           <bdi dir="ltr" className="equation small">
             {ex.tokens!.map((tk, i) => (tk.t === 'n' ? <span key={i} className="num">{tk.v}</span> : tk.t === 'blank' ? <span key={i} className="blank">?</span> : tk.t === 'w' ? <span key={i} className="word">{tk.v}</span> : <span key={i} className="op">{tk.v === '-' ? '−' : tk.v}</span>))}

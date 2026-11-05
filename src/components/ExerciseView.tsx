@@ -6,7 +6,7 @@ import { analyzeAnswer, mirroredTip, type ErrorAnalysis, type ErrorType } from '
 import type { InputMode } from '../engine/stats'
 import { checkAnswer } from '../exercises/registry'
 import type { Exercise, Token, Visual } from '../exercises/types'
-import { choicesForSpeech, speak, stop, tokensForSpeech } from '../speech/speech'
+import { choicesForSpeech, speak, speakQuestion, stop, tokensForSpeech } from '../speech/speech'
 import { Character, type CharacterKind, type Mood } from './Characters'
 import { emptyBox, HandwritingPad, type BoxValue } from './HandwritingPad'
 import { Keypad } from './Keypad'
@@ -132,7 +132,7 @@ export function ExerciseView({
   }, [ex, t])
 
   useEffect(() => {
-    void speak(instructionSpeech)
+    void speakQuestion(instructionSpeech)
     return () => stop()
   }, [instructionSpeech])
 

@@ -4,7 +4,8 @@ import { useApp } from '../app/AppContext'
 import { g } from '../content/he/text'
 import { createRng } from '../exercises/rng'
 import type { TopicId } from '../exercises/types'
-import { speak } from '../speech/speech'
+import { speak, speakQuestion } from '../speech/speech'
+import { SpeakButton } from '../components/SpeakButton'
 import { useGameRecorder } from './useGameRecorder'
 
 const ROUNDS = 6
@@ -54,12 +55,13 @@ export function TargetGame({ topicId, onEnd }: { topicId: TopicId; onEnd: (score
   const [score, setScore] = useState(0)
   const firstTry = useRef(true)
   const r = useMemo(() => makeRound(rng.current, big, i), [big, i])
+  const question = t(g(`צָרִיךְ לְקַבֵּל מִסְפָּר בֵּין ${r.lo} לְ־${r.hi}. בַּחֲרִי כַּרְטִיס.`, `צָרִיךְ לְקַבֵּל מִסְפָּר בֵּין ${r.lo} לְ־${r.hi}. בְּחַר כַּרְטִיס.`))
 
   useEffect(() => {
     firstTry.current = true
     setPicked(null)
-    void speak(t(g(`צָרִיךְ לְקַבֵּל מִסְפָּר בֵּין ${r.lo} לְ־${r.hi}. בַּחֲרִי כַּרְטִיס.`, `צָרִיךְ לְקַבֵּל מִסְפָּר בֵּין ${r.lo} לְ־${r.hi}. בְּחַר כַּרְטִיס.`)))
-  }, [r, t])
+    void speakQuestion(question)
+  }, [question])
 
   const result = picked === null ? null : r.op === '+' ? r.start + picked : r.start - picked
   const hit = result !== null && result >= r.lo && result <= r.hi
@@ -83,7 +85,10 @@ export function TargetGame({ topicId, onEnd }: { topicId: TopicId; onEnd: (score
   return (
     <div className="game target">
       <div className="game-round">{i + 1} / {ROUNDS}</div>
-      <p className="instruction">{t(g('בַּחֲרִי כַּרְטִיס כְּדֵי לִפְגֹּעַ בַּמַּטָּרָה', 'בְּחַר כַּרְטִיס כְּדֵי לִפְגֹּעַ בַּמַּטָּרָה'))}</p>
+      <div className="question-row">
+        <SpeakButton text={question} />
+        <p className="instruction">{t(g('בַּחֲרִי כַּרְטִיס כְּדֵי לִפְגֹּעַ בַּמַּטָּרָה', 'בְּחַר כַּרְטִיס כְּדֵי לִפְגֹּעַ בַּמַּטָּרָה'))}</p>
+      </div>
       <div className="equation-wrap">
         <bdi dir="ltr" className="equation">
           <span className="num">{r.start}</span>

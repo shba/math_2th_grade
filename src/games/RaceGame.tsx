@@ -5,7 +5,8 @@ import { g } from '../content/he/text'
 import { numberChoices } from '../exercises/helpers'
 import { generateExercise } from '../exercises/registry'
 import { createRng } from '../exercises/rng'
-import { speak, tokensForSpeech } from '../speech/speech'
+import { speakQuestion, tokensForSpeech } from '../speech/speech'
+import { SpeakButton } from '../components/SpeakButton'
 import { useGameRecorder } from './useGameRecorder'
 
 const STEPS = 10
@@ -42,7 +43,7 @@ export function RaceGame({ onEnd }: { onEnd: (score: number, total: number, extr
   useEffect(() => {
     if (timed === null) return
     firstTry.current = true
-    void speak(tokensForSpeech(ex.tokens!))
+    void speakQuestion(tokensForSpeech(ex.tokens!))
   }, [ex, timed])
 
   if (timed === null) {
@@ -94,7 +95,8 @@ export function RaceGame({ onEnd }: { onEnd: (score: number, total: number, extr
         <span className="finish" aria-hidden>🏁</span>
       </div>
       {timed && <p className="timer" aria-live="off"><bdi dir="ltr">{elapsed.toFixed(1)}</bdi> ⏱️</p>}
-      <div className="equation-wrap">
+      <div className="equation-wrap question-row">
+        <SpeakButton text={tokensForSpeech(ex.tokens!)} />
         <bdi dir="ltr" className="equation">
           {ex.tokens!.map((tk, i) => (tk.t === 'n' ? <span key={i} className="num">{tk.v}</span> : tk.t === 'blank' ? <span key={i} className="blank">?</span> : tk.t === 'op' ? <span key={i} className="op">{tk.v === '-' ? '−' : tk.v}</span> : null))}
         </bdi>

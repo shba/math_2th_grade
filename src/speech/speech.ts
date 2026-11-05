@@ -15,12 +15,14 @@ export interface SpeechSettings {
   /** Send vocalized text to the device voice. */
   withNikud: boolean
   muted: boolean
+  /** Read each new question aloud as it appears; otherwise only the speaker button reads it. */
+  autoReadQuestions: boolean
 }
 
 export const SPEEDS = [0.75, 0.85, 1, 1.15, 1.3]
 
 const SETTINGS_KEY = 'mk-speech'
-const DEFAULTS: SpeechSettings = { speed: 1, withNikud: true, muted: false }
+const DEFAULTS: SpeechSettings = { speed: 1, withNikud: true, muted: false, autoReadQuestions: false }
 
 export function loadSpeechSettings(): SpeechSettings {
   try {
@@ -120,6 +122,11 @@ export async function speak(text: string | string[]): Promise<void> {
     }
   }
   if (current()) emit(false)
+}
+
+/** For a question that just appeared: read it only if the parent turned on automatic reading. */
+export function speakQuestion(text: string | string[]): Promise<void> {
+  return settings.autoReadQuestions ? speak(text) : Promise.resolve()
 }
 
 export function stop() {

@@ -230,6 +230,10 @@ function SpeechPanel() {
         </div>
       </div>
       <label className="toggle">
+        <input type="checkbox" checked={s.autoReadQuestions} onChange={(e) => update({ autoReadQuestions: e.target.checked })} />
+        <span>הקראה אוטומטית של שאלות (כשכבוי, השאלה מוקראת רק בלחיצה על 🔊)</span>
+      </label>
+      <label className="toggle">
         <input type="checkbox" checked={s.muted} onChange={(e) => update({ muted: e.target.checked })} />
         <span>השתקת הקראה במכשיר זה</span>
       </label>
