@@ -23,8 +23,19 @@ jobs:
         with:
           node-version: 22
           cache: npm
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
       - run: npm ci
       - run: npm test
+      # Clips are committed; this only records phrases that changed since. If the
+      # voice service is unreachable the app falls back to device speech for them.
+      - name: Record missing speech clips
+        continue-on-error: true
+        run: |
+          npm run speech:collect
+          pip install -r scripts/requirements-speech.txt
+          python scripts/generate_speech.py
       - run: npm run build
         env:
           BASE_PATH: /${{ github.event.repository.name }}/
