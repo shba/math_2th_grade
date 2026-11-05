@@ -1,4 +1,4 @@
-import { stripNikud } from '../content/he/text'
+import { hasNikud, stripNikud } from '../content/he/text'
 import { loadManifest, playSamples, stitch, stopPlayer, unlockPlayer } from './clips'
 import { coverSentence, toSentences, type Piece } from './speechText'
 import { cancelWebSpeech, unlockWebSpeech, webSpeak } from './webSpeech'
@@ -75,7 +75,10 @@ export async function planSpeech(text: string | string[]): Promise<{ parts: Part
   const has = (k: string) => !!clips && k in clips
   const parts: Part[] = []
   for (const s of (Array.isArray(text) ? text : [text]).flatMap((t) => toSentences(t))) {
-    const cover = clips ? coverSentence(s, has) : null
+    // App text is vocalized; an unvocalized word is typed by the user (a child's name) and has no
+    // recording. Skipping it beats switching to the device voice mid-sentence.
+    const vocalized = s.filter((w) => w.num || hasNikud(w.say))
+    const cover = clips ? (coverSentence(s, has) ?? (vocalized.length ? coverSentence(vocalized, has) : null)) : null
     const last = parts[parts.length - 1]
     if (cover) {
       if (last?.kind === 'clips') {

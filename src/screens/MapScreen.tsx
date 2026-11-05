@@ -29,8 +29,7 @@ export function MapScreen() {
   const unlockAll = !!profile?.settings.unlockAll
 
   useEffect(() => {
-    // The typed name has no recording, and switching to the device voice mid-greeting sounds worse than leaving it out.
-    if (profile) void speak(t(g('שָׁלוֹם! לְאָן הוֹלְכִים הַיּוֹם? בַּחֲרִי אֶרֶץ בַּמַּפָּה.', 'שָׁלוֹם! לְאָן הוֹלְכִים הַיּוֹם? בְּחַר אֶרֶץ בַּמַּפָּה.')))
+    if (profile) void speak(t(g(`שָׁלוֹם ${profile.name}! לְאָן הוֹלְכִים הַיּוֹם? בַּחֲרִי אֶרֶץ בַּמַּפָּה.`, `שָׁלוֹם ${profile.name}! לְאָן הוֹלְכִים הַיּוֹם? בְּחַר אֶרֶץ בַּמַּפָּה.`)))
   }, [profile?.id]) // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!profile || !progress) return null
