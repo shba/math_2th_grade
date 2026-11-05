@@ -85,7 +85,7 @@ export function RaceGame({ onEnd }: { onEnd: (score: number, total: number, extr
       <div className="track" dir="ltr" aria-label={`התקדמות ${pos} מתוך ${STEPS}`}>
         {ghost !== null && (
           <span className="carriage ghost" style={{ left: `calc(${ghost * 88}%)` }} aria-hidden>
-            🛒
+            🐴
           </span>
         )}
         <motion.span className="carriage" animate={{ left: `${(pos / STEPS) * 88}%` }} aria-hidden>

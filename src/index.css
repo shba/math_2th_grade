@@ -1104,18 +1104,18 @@ p {
 }
 
 .cell {
-  inline-size: 34px;
-  block-size: 34px;
+  inline-size: min(34px, calc((100vw - 130px) / 10));
+  block-size: min(34px, calc((100vw - 130px) / 10));
   display: grid;
   place-items: center;
   border: 2px solid #ddd6fe;
   border-radius: 8px;
-  font-size: 24px;
+  font-size: min(24px, calc((100vw - 130px) / 14));
   line-height: 1;
 }
 
 .cell.gap {
-  margin-inline-end: 10px;
+  margin-inline-end: 8px;
 }
 
 .cell.added {
@@ -2046,4 +2046,48 @@ p {
   .apples {
     grid-template-columns: repeat(4, 120px);
   }
+}
+
+.game .choices,
+.game .cards,
+.game .castle-controls {
+  inline-size: 100%;
+}
+
+.game .choices {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.mini {
+  display: inline-block;
+  vertical-align: middle;
+  border-radius: 3px;
+}
+
+.tower-mini {
+  inline-size: 10px;
+  block-size: 34px;
+  background: #60a5fa;
+  border: 2px solid #1e3a8a;
+}
+
+.brick-mini {
+  inline-size: 14px;
+  block-size: 14px;
+  background: #f472b6;
+  border: 2px solid #831843;
+}
+
+.palace-mini {
+  inline-size: 30px;
+  block-size: 30px;
+  background: #fbbf24;
+  border: 2px solid #92400e;
+}
+
+.target-range {
+  font-family: var(--font-fun);
+  font-size: 30px;
+  font-weight: 600;
+  color: var(--accent);
 }

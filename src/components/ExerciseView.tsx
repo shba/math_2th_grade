@@ -5,7 +5,7 @@ import { g, join, type Txt } from '../content/he/text'
 import { analyzeAnswer, mirroredTip, type ErrorAnalysis, type ErrorType } from '../engine/errorAnalysis'
 import type { InputMode } from '../engine/stats'
 import { checkAnswer } from '../exercises/registry'
-import type { Exercise, Token } from '../exercises/types'
+import type { Exercise, Token, Visual } from '../exercises/types'
 import { choicesForSpeech, speak, stop, tokensForSpeech } from '../speech/speech'
 import { Character, type CharacterKind, type Mood } from './Characters'
 import { emptyBox, HandwritingPad, type BoxValue } from './HandwritingPad'
@@ -212,10 +212,20 @@ export function ExerciseView({
   }
 
   const dontKnow = () => {
-    setShowHint(true)
     setMood('think')
-    say(ex.hint)
+    if (!showHint) {
+      setShowHint(true)
+      say(ex.hint)
+      return
+    }
+    setAttempts((x) => Math.max(x, 2))
+    setAnalysis({ type: 'other', message: ex.hint, visual: ex.hintVisual })
+    say(join(SOLVE_TOGETHER, ex.hint, ex.answerType === 'number' ? `הַתְּשׁוּבָה הִיא ${ex.answers.join(' וְ־')}.` : ''))
+    setPhase('solution')
   }
+
+  const sameAsMain = (v: Visual | undefined) => !!v && !!ex.visual && JSON.stringify(v) === JSON.stringify(ex.visual)
+  const extraVisual = phase === 'right' ? undefined : (analysis?.visual ?? (showHint ? ex.hintVisual : undefined))
 
   const onDigit = (d: number) => {
     setTyped((prev) => prev.map((v, i) => (i === active && v.length < 3 ? v + d : v)))
@@ -291,12 +301,11 @@ export function ExerciseView({
             ))}
           </div>
         )}
-        {(analysis?.visual || (showHint && ex.hintVisual)) && phase !== 'right' && (
+        {extraVisual && !sameAsMain(extraVisual) && (
           <div className="visual-card hint-visual">
-            <VisualView v={(analysis?.visual ?? ex.hintVisual)!} />
+            <VisualView v={extraVisual} />
           </div>
         )}
-        {showHint && phase === 'answer' && <p className="hint-text">💡 {t(ex.hint)}</p>}
       </div>
 
       {ex.answerType === 'choice' && (

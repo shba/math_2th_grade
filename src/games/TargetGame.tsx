@@ -93,6 +93,17 @@ export function TargetGame({ topicId, onEnd }: { topicId: TopicId; onEnd: (score
           <span className="num">{result ?? '?'}</span>
         </bdi>
       </div>
+      <p className="target-range" aria-live="polite">
+        {result === null ? (
+          <>🎯 <bdi dir="ltr">{r.lo}–{r.hi}</bdi></>
+        ) : hit ? (
+          'בּוּל בַּמַּטָּרָה! 🎯'
+        ) : result < r.lo ? (
+          'קָרוֹב! צָרִיךְ קְצָת יוֹתֵר.'
+        ) : (
+          'קָרוֹב! צָרִיךְ קְצָת פָּחוֹת.'
+        )}
+      </p>
       <svg viewBox={`0 0 ${W} 80`} className="vis-svg" role="img" aria-label={`מטרה בין ${r.lo} ל־${r.hi}`}>
         <rect x={x(r.lo)} y="20" width={x(r.hi) - x(r.lo)} height="30" rx="6" fill="#fbcfe8" stroke="#db2777" strokeWidth="2" />
         <text x={(x(r.lo) + x(r.hi)) / 2} y="16" textAnchor="middle" fontSize="16">🎯</text>

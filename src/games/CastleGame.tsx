@@ -99,16 +99,16 @@ export function CastleGame({ onEnd }: { onEnd: (score: number, total: number) =>
         <div className="castle-controls">
           {big && (
             <div className="ctl">
-              <button type="button" className="btn ghost" onClick={() => add('h', 1)}>＋ 🏰 100</button>
+              <button type="button" className="btn ghost" onClick={() => add('h', 1)}>＋ <span className="mini palace-mini" aria-hidden /> 100</button>
               <button type="button" className="btn ghost" onClick={() => add('h', -1)} aria-label="הורדת מאה">－</button>
             </div>
           )}
           <div className="ctl">
-            <button type="button" className="btn ghost" onClick={() => add('t', 1)}>＋ 🗼 10</button>
+            <button type="button" className="btn ghost" onClick={() => add('t', 1)}>＋ <span className="mini tower-mini" aria-hidden /> 10</button>
             <button type="button" className="btn ghost" onClick={() => add('t', -1)} aria-label="הורדת עשרה">－</button>
           </div>
           <div className="ctl">
-            <button type="button" className="btn ghost" onClick={() => add('o', 1)}>＋ 🧱 1</button>
+            <button type="button" className="btn ghost" onClick={() => add('o', 1)}>＋ <span className="mini brick-mini" aria-hidden /> 1</button>
             <button type="button" className="btn ghost" onClick={() => add('o', -1)} aria-label="הורדת אחד">－</button>
           </div>
         </div>
