@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { HashRouter, Link, Navigate, Route, Routes } from 'react-router-dom'
+import { Fragment, useState } from 'react'
+import { HashRouter, Link, Navigate, Route, Routes, useParams } from 'react-router-dom'
 import { AppProvider, useApp } from './app/AppContext'
 import { BadgesScreen } from './screens/BadgesScreen'
 import { GamePlay, GamesHub } from './screens/GamesScreen'
@@ -19,6 +19,12 @@ import { TopicScreen } from './screens/TopicScreen'
 function NeedsProfile({ children }: { children: React.ReactNode }) {
   const { profileId } = useApp()
   return profileId ? children : <Navigate to="/profiles" replace />
+}
+
+/** Remounts the screen when its topic or game changes, so no state carries over between them. */
+function PerParam({ children }: { children: React.ReactNode }) {
+  const { topicId, gameId } = useParams()
+  return <Fragment key={topicId ?? gameId}>{children}</Fragment>
 }
 
 function NoVoiceBanner() {
@@ -43,13 +49,13 @@ export default function App() {
           <Route path="/new" element={<NewProfileScreen />} />
           <Route path="/placement" element={<NeedsProfile><PlacementScreen /></NeedsProfile>} />
           <Route path="/map" element={<NeedsProfile><MapScreen /></NeedsProfile>} />
-          <Route path="/topic/:topicId" element={<NeedsProfile><TopicScreen /></NeedsProfile>} />
-          <Route path="/lesson/:topicId" element={<NeedsProfile><LessonScreen /></NeedsProfile>} />
-          <Route path="/practice/:topicId" element={<NeedsProfile><PracticeScreen /></NeedsProfile>} />
-          <Route path="/test/:topicId" element={<NeedsProfile><LevelTestScreen /></NeedsProfile>} />
+          <Route path="/topic/:topicId" element={<NeedsProfile><PerParam><TopicScreen /></PerParam></NeedsProfile>} />
+          <Route path="/lesson/:topicId" element={<NeedsProfile><PerParam><LessonScreen /></PerParam></NeedsProfile>} />
+          <Route path="/practice/:topicId" element={<NeedsProfile><PerParam><PracticeScreen /></PerParam></NeedsProfile>} />
+          <Route path="/test/:topicId" element={<NeedsProfile><PerParam><LevelTestScreen /></PerParam></NeedsProfile>} />
           <Route path="/badges" element={<NeedsProfile><BadgesScreen /></NeedsProfile>} />
           <Route path="/games" element={<NeedsProfile><GamesHub /></NeedsProfile>} />
-          <Route path="/games/:gameId" element={<NeedsProfile><GamePlay /></NeedsProfile>} />
+          <Route path="/games/:gameId" element={<NeedsProfile><PerParam><GamePlay /></PerParam></NeedsProfile>} />
           <Route path="/parent" element={<ParentGate />} />
           <Route path="/parent/dashboard" element={<ParentDashboard />} />
           <Route path="/parent/credits" element={<CreditsScreen />} />

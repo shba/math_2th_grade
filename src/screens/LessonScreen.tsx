@@ -38,14 +38,10 @@ const AGAIN = g('כִּמְעַט! סִפְרִי שׁוּב אֶת הַתַּפ
 
 export function LessonScreen() {
   const { topicId } = useParams<{ topicId: TopicId }>()
-  return <Lesson key={topicId} topicId={topicId!} />
-}
-
-function Lesson({ topicId }: { topicId: TopicId }) {
   const nav = useNavigate()
   const { t, profileId } = useApp()
   const { hero, pet } = useGuide()
-  const topic = topicById(topicId)
+  const topic = topicById(topicId!)
   const slides = LESSONS[topic.id]
   const [i, setI] = useState(0)
   const [picked, setPicked] = useState<number | null>(null)
