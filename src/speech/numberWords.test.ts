@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest'
 import { numberToWords } from './numberWords'
-import { textForSpeech, tokensForSpeech } from './speech'
+import { tokensForSpeech } from './phrasing'
+import type { Token } from '../exercises/types'
+import { toSentences } from './speechText'
+
+const N = (s: string) => s.normalize('NFC')
+
+const spoken = (t: string) => toSentences(t).map((s) => s.map((w) => w.say).join(' ')).join(' ')
 
 describe('numberToWords', () => {
   it('reads numbers in the feminine counting form', () => {
@@ -17,10 +23,10 @@ describe('numberToWords', () => {
   })
 
   it('speaks equations as words', () => {
-    expect(tokensForSpeech([{ t: 'n', v: 8 }, { t: 'op', v: '+' }, { t: 'n', v: 5 }, { t: 'op', v: '=' }, { t: 'blank', i: 0 }])).toBe(
-      'שְׁמוֹנֶה וְעוֹד חָמֵשׁ שָׁוֶה כַּמָּה',
-    )
-    expect(textForSpeech('כַּמָּה עֲשָׂרוֹת יֵשׁ בַּמִּסְפָּר 47?')).toBe('כַּמָּה עֲשָׂרוֹת יֵשׁ בַּמִּסְפָּר אַרְבָּעִים וְשֶׁבַע?')
-    expect(textForSpeech('הִתְחִיל בַּשָּׁעָה 4:30')).toBe('הִתְחִיל בַּשָּׁעָה אַרְבַּע וָחֵצִי')
+    const tokens = [{ t: 'n', v: 8 }, { t: 'op', v: '+' }, { t: 'n', v: 5 }, { t: 'op', v: '=' }, { t: 'blank', i: 0 }] as Token[]
+    expect(tokensForSpeech(tokens)).toBe('8 וְעוֹד 5 שָׁוֶה כַּמָּה')
+    expect(spoken(tokensForSpeech(tokens))).toBe(N('שְׁמוֹנֶה וְעוֹד חָמֵשׁ שָׁוֶה כַּמָּה'))
+    expect(spoken('כַּמָּה עֲשָׂרוֹת יֵשׁ בַּמִּסְפָּר 47?')).toBe(N('כַּמָּה עֲשָׂרוֹת יֵשׁ בַּמִּסְפָּר אַרְבָּעִים וְשֶׁבַע?'))
+    expect(spoken('הִתְחִיל בַּשָּׁעָה 4:30')).toBe(N('הִתְחִיל בַּשָּׁעָה אַרְבַּע וָחֵצִי'))
   })
 })

@@ -9,7 +9,7 @@ import { db, deleteProfile, resetProgress, type Profile, type ProfileSettings } 
 import { currentLevel } from '../../engine/adaptive'
 import { ERROR_LABELS } from '../../engine/errorAnalysis'
 import { accuracy, activeDays, dailyMinutes, errorCounts, hourHeatmap, pace, topicStatus, type TopicStatus } from '../../engine/stats'
-import { getSpeechSettings, hebrewVoices, saveSpeechSettings, speak, waitForVoices } from '../../speech/speech'
+import { downloadAllClips, getSpeechSettings, hebrewVoices, loadManifest, saveSpeechSettings, speak, SPEEDS, waitForVoices } from '../../speech/speech'
 import { isParentUnlocked } from './ParentGate'
 
 const STATUS: Record<TopicStatus, { label: string; cls: string }> = {
@@ -184,50 +184,87 @@ function ProfileSettingsPanel({ profile }: { profile: Profile }) {
   )
 }
 
+const SPEED_LABELS = ['איטי מאוד', 'איטי', 'רגיל', 'מהיר', 'מהיר מאוד']
+
 function SpeechPanel() {
   const [s, setS] = useState(getSpeechSettings())
   const [voices, setVoices] = useState<SpeechSynthesisVoice[]>(hebrewVoices())
+  const [clipCount, setClipCount] = useState<number | null | undefined>()
+  const [download, setDownload] = useState<string>()
   useEffect(() => void waitForVoices().then(setVoices), [])
+  useEffect(() => void loadManifest().then((m) => setClipCount(m ? new Set(Object.values(m)).size : null)), [])
   const update = (patch: Partial<typeof s>) => {
     saveSpeechSettings(patch)
     setS({ ...getSpeechSettings() })
   }
+  const saveOffline = async () => {
+    setDownload('מוריד…')
+    const failed = await downloadAllClips((done, total) => setDownload(`מוריד… ${Math.round((100 * done) / total)}%`))
+    setDownload(failed ? `הסתיים, ${failed} קטעים נכשלו — נסו שוב כשיש רשת` : 'כל ההקראות שמורות במכשיר ✓')
+  }
   return (
     <section className="panel">
       <h2>הקראה</h2>
-      {!voices.length && (
-        <div className="banner warn" role="status">
-          <b>לא נמצא קול עברי במכשיר.</b>
-          <ul>
-            <li>אנדרואיד: הגדרות ← נגישות / ניהול כללי ← המרת טקסט לדיבור ← בחרו "שירותי הדיבור של Google" ← התקינו נתוני קול לעברית.</li>
-            <li>אייפון/אייפד: הגדרות ← נגישות ← תוכן מוקרא ← קולות ← עברית ← Carmit (מומלץ להוריד גרסה משופרת).</li>
-            <li>מחשב: Edge מספק קולות עבריים איכותיים (Hila / Avri). ב־Windows: הגדרות ← זמן ושפה ← דיבור ← הוספת קולות.</li>
-          </ul>
-          <p>לאחר ההתקנה סגרו ופתחו את האפליקציה מחדש.</p>
+      {clipCount === null && (
+        <p className="banner warn" role="status">ההקראות המוקלטות לא נטענו (אין רשת?). בינתיים משתמשים בקול של המכשיר.</p>
+      )}
+      {clipCount && <p className="muted">קול מוקלט: Hila (Microsoft, עברית) · {clipCount} קטעים</p>}
+      <div className="field">
+        <span>מהירות דיבור</span>
+        <div className="speed-row" role="radiogroup" aria-label="מהירות דיבור">
+          {SPEEDS.map((v, i) => (
+            <button
+              key={v}
+              type="button"
+              role="radio"
+              aria-checked={s.speed === v}
+              className={`btn small ${s.speed === v ? 'primary' : 'ghost'}`}
+              onClick={() => {
+                update({ speed: v })
+                void speak('שָׁלוֹם! 8 וְעוֹד 5 שָׁוֶה 13.')
+              }}
+            >
+              {SPEED_LABELS[i]}
+            </button>
+          ))}
         </div>
-      )}
-      {voices.length > 0 && (
-        <label className="field">
-          <span>קול</span>
-          <select value={s.voiceURI ?? ''} onChange={(e) => update({ voiceURI: e.target.value || undefined })}>
-            <option value="">אוטומטי (הטוב ביותר)</option>
-            {voices.map((v) => <option key={v.voiceURI} value={v.voiceURI}>{v.name}</option>)}
-          </select>
-        </label>
-      )}
-      <label className="field">
-        <span>מהירות: <bdi dir="ltr">{s.rate.toFixed(2)}</bdi></span>
-        <input type="range" min={0.6} max={1.2} step={0.05} value={s.rate} onChange={(e) => update({ rate: Number(e.target.value) })} />
-      </label>
-      <label className="toggle">
-        <input type="checkbox" checked={s.withNikud} onChange={(e) => update({ withNikud: e.target.checked })} />
-        <span>לשלוח למנוע הדיבור טקסט מנוקד (כבו אם ההגייה נשמעת משובשת)</span>
-      </label>
+      </div>
       <label className="toggle">
         <input type="checkbox" checked={s.muted} onChange={(e) => update({ muted: e.target.checked })} />
         <span>השתקת הקראה במכשיר זה</span>
       </label>
-      <button type="button" className="btn ghost" onClick={() => void speak('שָׁלוֹם! שְׁמוֹנֶה וְעוֹד חָמֵשׁ שָׁוֶה שְׁלוֹשׁ עֶשְׂרֵה.')}>🔊 בדיקת קול</button>
+      <div className="row-actions">
+        <button type="button" className="btn ghost" onClick={() => void speak('שָׁלוֹם! 8 וְעוֹד 5 שָׁוֶה 13.')}>🔊 בדיקת קול</button>
+        {clipCount ? <button type="button" className="btn ghost" onClick={() => void saveOffline()} disabled={!!download && download.startsWith('מוריד')}>⬇️ שמירת כל ההקראות לשימוש בלי רשת</button> : null}
+      </div>
+      {download && <p className="muted" role="status">{download}</p>}
+      <details>
+        <summary>קול גיבוי של המכשיר</summary>
+        <p className="muted">משמש רק למשפט שאין לו הקלטה, או כשההקלטות לא זמינות.</p>
+        {!voices.length && (
+          <div className="banner warn" role="status">
+            <b>לא נמצא קול עברי במכשיר.</b>
+            <ul>
+              <li>אנדרואיד: הגדרות ← נגישות / ניהול כללי ← המרת טקסט לדיבור ← בחרו "שירותי הדיבור של Google" ← התקינו נתוני קול לעברית.</li>
+              <li>אייפון/אייפד: הגדרות ← נגישות ← תוכן מוקרא ← קולות ← עברית ← Carmit (מומלץ להוריד גרסה משופרת).</li>
+              <li>מחשב: Edge מספק קולות עבריים איכותיים (Hila / Avri). ב־Windows: הגדרות ← זמן ושפה ← דיבור ← הוספת קולות.</li>
+            </ul>
+          </div>
+        )}
+        {voices.length > 0 && (
+          <label className="field">
+            <span>קול</span>
+            <select value={s.voiceURI ?? ''} onChange={(e) => update({ voiceURI: e.target.value || undefined })}>
+              <option value="">אוטומטי (הטוב ביותר)</option>
+              {voices.map((v) => <option key={v.voiceURI} value={v.voiceURI}>{v.name}</option>)}
+            </select>
+          </label>
+        )}
+        <label className="toggle">
+          <input type="checkbox" checked={s.withNikud} onChange={(e) => update({ withNikud: e.target.checked })} />
+          <span>לשלוח למנוע הדיבור טקסט מנוקד (כבו אם ההגייה נשמעת משובשת)</span>
+        </label>
+      </details>
     </section>
   )
 }

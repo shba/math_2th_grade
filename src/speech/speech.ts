@@ -1,25 +1,37 @@
 import { stripNikud } from '../content/he/text'
-import type { Choice, Token } from '../exercises/types'
-import { numberToWords } from './numberWords'
+import { loadManifest, playSamples, stitch, stopPlayer, unlockPlayer } from './clips'
+import { coverSentence, toSentences, type Piece } from './speechText'
+import { cancelWebSpeech, unlockWebSpeech, webSpeak } from './webSpeech'
+
+export { choicesForSpeech, tokensForSpeech } from './phrasing'
+export { hebrewVoices, waitForVoices } from './webSpeech'
+export { downloadAll as downloadAllClips, loadManifest } from './clips'
 
 export interface SpeechSettings {
-  rate: number
+  /** Playback speed, 1 = the recorded pace. */
+  speed: number
+  /** Device voice for the fallback. */
   voiceURI?: string
+  /** Send vocalized text to the device voice. */
   withNikud: boolean
   muted: boolean
 }
 
+export const SPEEDS = [0.75, 0.85, 1, 1.15, 1.3]
+
 const SETTINGS_KEY = 'mk-speech'
+const DEFAULTS: SpeechSettings = { speed: 1, withNikud: true, muted: false }
 
 export function loadSpeechSettings(): SpeechSettings {
   try {
-    return { rate: 0.9, withNikud: true, muted: false, ...JSON.parse(localStorage.getItem(SETTINGS_KEY) ?? '{}') }
+    const { rate: _old, ...saved } = JSON.parse(localStorage.getItem(SETTINGS_KEY) ?? '{}')
+    return { ...DEFAULTS, ...saved }
   } catch {
-    return { rate: 0.9, withNikud: true, muted: false }
+    return { ...DEFAULTS }
   }
 }
 
-let settings = typeof localStorage === 'undefined' ? { rate: 0.9, withNikud: true, muted: false } : loadSpeechSettings()
+let settings = typeof localStorage === 'undefined' ? { ...DEFAULTS } : loadSpeechSettings()
 
 export function saveSpeechSettings(s: Partial<SpeechSettings>) {
   settings = { ...settings, ...s }
@@ -35,11 +47,6 @@ export const setProfileMuted = (m: boolean) => {
   if (m) stop()
 }
 
-const supported = () => typeof window !== 'undefined' && 'speechSynthesis' in window
-
-let unlocked = false
-let voice: SpeechSynthesisVoice | undefined
-
 const listeners = new Set<(speaking: boolean) => void>()
 export function onSpeakingChange(fn: (speaking: boolean) => void) {
   listeners.add(fn)
@@ -47,126 +54,74 @@ export function onSpeakingChange(fn: (speaking: boolean) => void) {
 }
 const emit = (v: boolean) => listeners.forEach((l) => l(v))
 
-function rankVoice(v: SpeechSynthesisVoice) {
-  let s = 0
-  if (/enhanced|natural|online|neural|premium/i.test(v.name)) s += 3
-  if (/google/i.test(v.name)) s += 2
-  if (v.localService) s += 1
-  return s
-}
-
-export function hebrewVoices(): SpeechSynthesisVoice[] {
-  if (!supported()) return []
-  return speechSynthesis
-    .getVoices()
-    .filter((v) => v.lang.toLowerCase().startsWith('he') || v.lang.toLowerCase().startsWith('iw'))
-    .sort((a, b) => rankVoice(b) - rankVoice(a))
-}
-
-export function waitForVoices(timeout = 2500): Promise<SpeechSynthesisVoice[]> {
-  if (!supported()) return Promise.resolve([])
-  const now = hebrewVoices()
-  if (now.length) return Promise.resolve(now)
-  return new Promise((resolve) => {
-    const done = () => {
-      speechSynthesis.removeEventListener('voiceschanged', done)
-      resolve(hebrewVoices())
-    }
-    speechSynthesis.addEventListener('voiceschanged', done)
-    setTimeout(done, timeout)
-  })
-}
-
-function pickVoice() {
-  const list = hebrewVoices()
-  voice = list.find((v) => v.voiceURI === settings.voiceURI) ?? list[0]
-  return voice
-}
+let unlocked = false
 
 /** Must run inside a user gesture (the "let's start" tap) so later auto-reading is allowed. */
 export function unlockSpeech() {
-  if (!supported() || unlocked) return
+  void loadManifest()
+  if (unlocked || typeof window === 'undefined') return
   unlocked = true
-  const u = new SpeechSynthesisUtterance(' ')
-  u.volume = 0
-  u.lang = 'he-IL'
-  speechSynthesis.speak(u)
-  pickVoice()
-  try {
-    const Ctx = window.AudioContext ?? (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext
-    void new Ctx().resume()
-  } catch {
-    /* audio context is optional */
-  }
+  unlockPlayer()
+  unlockWebSpeech()
 }
 
 export const isSpeechUnlocked = () => unlocked
 
-/** Replace digits and math signs with spoken words. */
-export function textForSpeech(text: string): string {
-  let t = text
-    .replace(/\b(\d{1,2}):(\d\d)\b/g, (_, h, m) => (m === '00' ? h : m === '30' ? `${h} וָחֵצִי` : `${h} וְ־${m} דַּקּוֹת`))
-    .replace(/(\d+)\s*×\s*(\d+)/g, (_, a, b) => `${a} כָּפוּל ${b}`)
-    .replace(/(\d+)\s*:\s*(\d+)/g, (_, a, b) => `${a} חֶלְקֵי ${b}`)
-    .replace(/(\d+)\s*\+\s*(\d+)/g, (_, a, b) => `${a} וְעוֹד ${b}`)
-    .replace(/(\d+)\s*[−-]\s*(\d+)/g, (_, a, b) => `${a} פָּחוֹת ${b}`)
-    .replace(/(\d),(\d{3})/g, '$1$2')
-    .replace(/\d+/g, (m) => numberToWords(Number(m)))
-    .replace(/[־]/g, ' ')
-    .replace(/[״׳]/g, '')
-  if (!settings.withNikud) t = stripNikud(t)
-  return t.replace(/\s+/g, ' ').trim()
-}
+type Part = { kind: 'clips'; pieces: Piece[] } | { kind: 'device'; text: string }
 
-export function tokensForSpeech(tokens: Token[], blankWord = 'כַּמָּה'): string {
-  return tokens
-    .map((t) => {
-      if (t.t === 'n') return numberToWords(t.v)
-      if (t.t === 'blank') return blankWord
-      if (t.t === 'w') return t.v
-      return { '+': 'וְעוֹד', '-': 'פָּחוֹת', '×': 'כָּפוּל', ':': 'חֶלְקֵי', '=': 'שָׁוֶה', '<': 'קָטָן מִ', '>': 'גָּדוֹל מִ', ',': ',', '…': '' }[t.v]
-    })
-    .join(' ')
+/** Recorded clips for every sentence that has them; device speech only for the rest. */
+export async function planSpeech(text: string | string[]): Promise<{ parts: Part[]; clips: Record<string, string> | null }> {
+  const clips = await loadManifest()
+  const has = (k: string) => !!clips && k in clips
+  const parts: Part[] = []
+  for (const s of (Array.isArray(text) ? text : [text]).flatMap((t) => toSentences(t))) {
+    const cover = clips ? coverSentence(s, has) : null
+    const last = parts[parts.length - 1]
+    if (cover) {
+      if (last?.kind === 'clips') {
+        cover[0].gap = 'sentence'
+        last.pieces.push(...cover)
+      } else parts.push({ kind: 'clips', pieces: cover })
+    } else {
+      const words = s.map((w) => w.say).join(' ')
+      if (clips && import.meta.env.DEV) console.warn('[speech] no clip for:', words)
+      if (last?.kind === 'device') last.text += ` ${words}`
+      else parts.push({ kind: 'device', text: words })
+    }
+  }
+  return { parts, clips }
 }
-
-export const choicesForSpeech = (choices: Choice[]) =>
-  choices.filter((c) => c.label || c.speak).map((c) => c.speak ?? c.label).join(', אוֹ ')
 
 let queueId = 0
 
 /** Speak one or more sentences; resolves when finished or interrupted. */
-export function speak(text: string | string[]): Promise<void> {
-  if (!supported() || settings.muted || profileMuted) return Promise.resolve()
+export async function speak(text: string | string[]): Promise<void> {
+  if (settings.muted || profileMuted || typeof window === 'undefined') return
   const id = ++queueId
-  speechSynthesis.cancel()
-  const parts = (Array.isArray(text) ? text : [text])
-    .flatMap((p) => textForSpeech(p).split(/(?<=[.!?])\s+/))
-    .filter((p) => p.trim())
-  if (!parts.length) return Promise.resolve()
-  if (!voice) pickVoice()
+  stopPlayer()
+  cancelWebSpeech()
+  const current = () => id === queueId
+  const { parts, clips } = await planSpeech(text)
+  if (!current() || !parts.length) return
   emit(true)
-  return new Promise((resolve) => {
-    let i = 0
-    const next = () => {
-      if (id !== queueId || i >= parts.length) {
-        if (id === queueId) emit(false)
-        resolve()
-        return
-      }
-      const u = new SpeechSynthesisUtterance(parts[i++])
-      u.lang = 'he-IL'
-      if (voice) u.voice = voice
-      u.rate = settings.rate
-      u.onend = next
-      u.onerror = next
-      speechSynthesis.speak(u)
+  // Decode every clip part up front so parts follow each other without a wait.
+  const audio = parts.map((p) => (p.kind === 'clips' && clips ? stitch(p.pieces, clips).catch(() => null) : null))
+  for (let i = 0; i < parts.length && current(); i++) {
+    const p = parts[i]
+    const samples = await audio[i]
+    if (!current()) break
+    if (samples) await playSamples(samples, settings.speed)
+    else {
+      const words = p.kind === 'device' ? p.text : p.pieces.map((x) => x.key).join(' ')
+      await webSpeak(settings.withNikud ? words : stripNikud(words), { rate: 0.9 * settings.speed, voiceURI: settings.voiceURI }, current)
     }
-    next()
-  })
+  }
+  if (current()) emit(false)
 }
 
 export function stop() {
   queueId++
-  if (supported()) speechSynthesis.cancel()
+  stopPlayer()
+  cancelWebSpeech()
   emit(false)
 }

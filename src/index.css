@@ -1988,6 +1988,27 @@ p {
   accent-color: var(--primary);
 }
 
+.speed-row,
+.row-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.btn.small {
+  min-block-size: 44px;
+  padding: 6px 14px;
+  font-size: 16px;
+}
+
+.panel details summary {
+  cursor: pointer;
+  font-weight: 600;
+  min-block-size: 44px;
+  display: flex;
+  align-items: center;
+}
+
 .confirm-box {
   padding: 14px;
   border-radius: 16px;

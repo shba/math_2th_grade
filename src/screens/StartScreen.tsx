@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Character } from '../components/Characters'
 import { Screen } from '../components/Chrome'
 import { db } from '../data/db'
-import { speak, unlockSpeech, waitForVoices } from '../speech/speech'
+import { loadManifest, speak, unlockSpeech, waitForVoices } from '../speech/speech'
 import { useApp } from '../app/AppContext'
 
 export function StartScreen() {
@@ -12,8 +12,8 @@ export function StartScreen() {
 
   const start = async () => {
     unlockSpeech()
-    const voices = await waitForVoices()
-    if (!voices.length) sessionStorage.setItem('mk-no-voice', '1')
+    const [clips, voices] = await Promise.all([loadManifest(), waitForVoices()])
+    if (!clips && !voices.length) sessionStorage.setItem('mk-no-voice', '1')
     const profiles = await db.profiles.toArray()
     const current = profiles.find((p) => p.id === profileId)
     if (!current && profiles.length === 1) setProfileId(profiles[0].id)

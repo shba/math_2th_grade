@@ -32,8 +32,22 @@ export default defineConfig({
         ],
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,svg,png,woff,woff2}'],
+        globPatterns: ['**/*.{js,css,html,svg,png,woff,woff2}', 'audio/he/manifest.json'],
         navigateFallback: 'index.html',
+        // Clips are named by a hash of their text, so a cached file never goes stale.
+        // They are cached as they play (or all at once from the parent screen) instead
+        // of precached, to keep the install small.
+        runtimeCaching: [
+          {
+            urlPattern: /\/audio\/he\/[0-9a-f]+\.mp3$/,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'speech-clips',
+              expiration: { maxEntries: 5000 },
+              cacheableResponse: { statuses: [200] },
+            },
+          },
+        ],
       },
     }),
   ],

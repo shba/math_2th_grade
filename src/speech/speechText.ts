@@ -24,6 +24,7 @@ export const wordKey = (w: string) => w.replace(PUNCT, '').replace(/[.,!?:;"()�
 /** Digits and math signs become words; times, products and quotients get their spoken form. */
 export function normalizeMath(text: string): string {
   return text
+    .normalize('NFC')
     .replace(/\b(\d{1,2}):(\d\d)\b/g, (_, h, m) => (m === '00' ? h : m === '30' ? `${h} וָחֵצִי` : `${h} וְ־${m} דַּקּוֹת`))
     .replace(/(\d+)\s*×\s*(\d+)/g, (_, a, b) => `${a} כָּפוּל ${b}`)
     .replace(/(\d+)\s*:\s*(\d+)/g, (_, a, b) => `${a} חֶלְקֵי ${b}`)
@@ -44,6 +45,10 @@ const vowelOf = (w: string) => {
 
 /** Attach a one-letter prefix (ל, ב, מ, ו) to a word with the vowel Hebrew grammar asks for. */
 export function attachPrefix(prefix: string, word: string): string {
+  return fuse(prefix, word).normalize('NFC')
+}
+
+function fuse(prefix: string, word: string): string {
   const letter = prefix[0]
   if (letter === 'ו') return withVav(word)
   if (letter === 'מ') return /[אהחער]/.test(word[0]) ? `מֵ${word}` : `מִ${word}`
@@ -59,7 +64,7 @@ export function attachPrefix(prefix: string, word: string): string {
 export function numberWords(n: number, prefix = ''): string[] {
   const words = numberToWords(n).split(' ')
   if (prefix) words[0] = attachPrefix(prefix, words[0])
-  return words
+  return words.map((w) => w.normalize('NFC'))
 }
 
 const TOKEN = /(?<![^\s"(])([ובלמ][\u05B0-\u05BC\u05C1\u05C2]*)־(\d+)|(\d+)|([^\s\d]+)/g
@@ -79,10 +84,15 @@ export function toSentences(text: string): Sentence[] {
       for (const w of numberWords(Number(prefixedNum ?? num), prefix ?? '')) cur.push({ say: w, key: w, num: true, pause: false })
       continue
     }
-    const key = wordKey(raw)
+    const key = /\p{L}/u.test(raw) ? wordKey(raw) : ''
     const end = /[.!?:;]["״)]*$/.test(raw) || raw === '—'
     if (key) cur.push({ say: raw, key, num: false, pause: /[,—–]$/.test(raw) })
-    else if (cur.length && /[,—–]/.test(raw)) cur[cur.length - 1].pause = true
+    else if (cur.length) {
+      // Punctuation after a number ("10," "10?") arrives as its own token.
+      const last = cur[cur.length - 1]
+      if (raw !== '—') last.say += raw
+      if (/[,—–]/.test(raw)) last.pause = true
+    }
     if (end) flush()
   }
   flush()
