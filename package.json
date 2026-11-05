@@ -9,12 +9,16 @@
     "lint": "oxlint",
     "preview": "vite preview",
     "test": "vitest run",
-    "speech:collect": "tsx scripts/collect-speech.ts"
+    "speech:collect": "tsx scripts/collect-speech.ts",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@fontsource-variable/fredoka": "^5.3.0",
     "@fontsource/noto-sans-hebrew": "^5.3.0",
     "@fontsource/rubik": "^5.3.0",
+    "@tensorflow/tfjs-backend-cpu": "^4.22.0",
+    "@tensorflow/tfjs-core": "^4.22.0",
+    "@tensorflow/tfjs-layers": "^4.22.0",
     "dexie": "^4.4.7",
     "dexie-react-hooks": "^4.4.0",
     "framer-motion": "^14.9.1",
@@ -23,6 +27,7 @@
     "react-router-dom": "^7.18.5"
   },
   "devDependencies": {
+    "@playwright/test": "^1.64.1",
     "@testing-library/react": "^16.3.3",
     "@types/node": "^24.19.2",
     "@types/react": "^19.3.0",

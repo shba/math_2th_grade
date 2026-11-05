@@ -7,6 +7,8 @@ export interface Slide {
   text: Txt
   visual?: Visual
   tokens?: Token[]
+  /** Required whenever tokens contain a blank: the child answers by tapping one of the choices. */
+  ask?: { answer: number; choices: number[] }
 }
 
 const welcome = (place: string, what: string): Slide => ({
@@ -19,7 +21,7 @@ const yourTurn: Slide = { speaker: 'pet', text: g('עַכְשָׁו תּוֹרֵ
 export const LESSONS: Record<TopicId, Slide[]> = {
   'add-sub-20': [
     welcome('לְיַעַר הַחִבּוּר', 'כָּאן נְחַבֵּר וּנְחַסֵּר עַד 20.'),
-    { speaker: 'pet', text: 'יֵשׁ לִי 8 תַּפּוּחִים. קִבַּלְתִּי עוֹד 5. כַּמָּה יֵשׁ לִי עַכְשָׁו?', visual: { kind: 'items', icon: '🍎', count: 13, added: 5, slots: 20 }, tokens: [n(8), op('+'), n(5), op('='), blank()] },
+    { speaker: 'pet', text: 'יֵשׁ לִי 8 תַּפּוּחִים. קִבַּלְתִּי עוֹד 5. כַּמָּה יֵשׁ לִי עַכְשָׁו?', visual: { kind: 'items', icon: '🍎', count: 13, added: 5, slots: 20 }, tokens: [n(8), op('+'), n(5), op('='), blank()], ask: { answer: 13, choices: [12, 13, 14] } },
     { speaker: 'hero', text: 'הִנֵּה טְרִיק קָסוּם: קֹדֶם מַשְׁלִימִים לְ־10. 8 וְעוֹד 2 זֶה 10, וְעוֹד 3 זֶה 13.', visual: { kind: 'items', icon: '🍎', count: 13, added: 5, slots: 20 }, tokens: [n(8), op('+'), n(5), op('='), n(13)] },
     { speaker: 'pet', text: 'וּבְחִסּוּר? 13 פָּחוֹת 5: קֹדֶם מוֹרִידִים 3 וּמַגִּיעִים לְ־10, וְאָז עוֹד 2. יוֹצֵא 8.', visual: { kind: 'items', icon: '🍎', count: 13, crossed: 5, slots: 20 }, tokens: [n(13), op('-'), n(5), op('='), n(8)] },
     { speaker: 'hero', text: g('שִׂימִי לֵב לַסִּימָן: + אוֹמֵר לְהוֹסִיף, − אוֹמֵר לְהוֹרִיד.', 'שִׂים לֵב לַסִּימָן: + אוֹמֵר לְהוֹסִיף, − אוֹמֵר לְהוֹרִיד.'), tokens: [n(15), op('-'), n(3), op('='), n(12)] },

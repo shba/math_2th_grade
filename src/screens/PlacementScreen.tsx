@@ -68,7 +68,7 @@ export function PlacementScreen() {
 
   if (phase === 'intro') {
     return (
-      <Screen className="center-screen">
+      <Screen className="center-screen fit">
         <Character kind={hero} size={150} mood="talk" />
         <p className="speech-bubble big">{t(intro)}</p>
         <button type="button" className="btn primary huge" onClick={() => setPhase('test')}>
@@ -80,7 +80,7 @@ export function PlacementScreen() {
 
   if (phase === 'done') {
     return (
-      <Screen className="center-screen">
+      <Screen className="center-screen fit">
         <Confetti />
         <Character kind={hero} size={150} mood="cheer" />
         <p className="speech-bubble big">{t(doneText)}</p>
@@ -92,7 +92,7 @@ export function PlacementScreen() {
   }
 
   return (
-    <Screen>
+    <Screen className="fit exercise-screen">
       <TopBar
         back="/profiles"
         title={

@@ -78,7 +78,7 @@ export function LevelTestScreen() {
   if (result) {
     const badge = topic.levels[result.level - 1].badge
     return (
-      <Screen className="center-screen">
+      <Screen className="center-screen fit">
         {result.passed && <Confetti />}
         <Character kind={hero} size={130} mood={result.passed ? 'cheer' : 'idle'} />
         <p className="score">
@@ -116,7 +116,7 @@ export function LevelTestScreen() {
 
   if (idx === -1) {
     return (
-      <Screen className="center-screen">
+      <Screen className="center-screen fit">
         <Character kind={hero} size={140} mood="talk" />
         <p className="speech-bubble big">{t(intro)}</p>
         <button type="button" className="btn accent huge" onClick={() => setIdx(0)}>
@@ -127,7 +127,7 @@ export function LevelTestScreen() {
   }
 
   return (
-    <Screen>
+    <Screen className="fit exercise-screen">
       <TopBar back={`/topic/${topic.id}`} title={<ProgressDots total={exercises.length} done={idx} />} />
       <ExerciseView key={exercises[idx].id} exercise={exercises[idx]} mode="test" guide={hero} onDone={onDone} handwritingDefault={profile?.settings.handwriting ?? true} />
     </Screen>

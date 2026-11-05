@@ -86,7 +86,7 @@ export function CastleGame({ onEnd }: { onEnd: (score: number, total: number) =>
 
   return (
     <div className="game castle-game">
-      <div className="game-round">{round + 1} / {ROUNDS}</div>
+      <div className="game-round"><bdi dir="ltr">{round + 1} / {ROUNDS}</bdi></div>
       <div className="question-row">
         <SpeakButton text={t(g(`בְּנִי טִירָה שֶׁל ${target}`, `בְּנֵה טִירָה שֶׁל ${target}`))} />
         <p className="target-number">

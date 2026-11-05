@@ -84,7 +84,7 @@ export function TargetGame({ topicId, onEnd }: { topicId: TopicId; onEnd: (score
 
   return (
     <div className="game target">
-      <div className="game-round">{i + 1} / {ROUNDS}</div>
+      <div className="game-round"><bdi dir="ltr">{i + 1} / {ROUNDS}</bdi></div>
       <div className="question-row">
         <SpeakButton text={question} />
         <p className="instruction">{t(g('בַּחֲרִי כַּרְטִיס כְּדֵי לִפְגֹּעַ בַּמַּטָּרָה', 'בְּחַר כַּרְטִיס כְּדֵי לִפְגֹּעַ בַּמַּטָּרָה'))}</p>

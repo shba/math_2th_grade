@@ -32,7 +32,8 @@ export default defineConfig({
         ],
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,svg,png,woff,woff2}', 'audio/he/manifest.json'],
+        globPatterns: ['**/*.{js,css,html,svg,png,woff,woff2}', 'audio/he/manifest.json', 'models/**/*.{json,bin}'],
+        maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
         navigateFallback: 'index.html',
         // Clips are named by a hash of their text, so a cached file never goes stale.
         // They are cached as they play (or all at once from the parent screen) instead
@@ -53,6 +54,6 @@ export default defineConfig({
   ],
   test: {
     environment: 'node',
-    include: ['src/**/*.test.ts'],
+    include: ['src/**/*.test.{ts,tsx}'],
   },
 })

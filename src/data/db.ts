@@ -3,7 +3,7 @@ import type { Gender } from '../content/he/text'
 import type { TopicProgress } from '../engine/adaptive'
 import type { Attempt, UsageRecord } from '../engine/stats'
 import type { TopicId } from '../exercises/types'
-import type { Pt } from '../handwriting/pdollar'
+import type { Pt } from '../handwriting/preprocess'
 
 export type Avatar = 'princess' | 'prince' | 'animal'
 export type Companion = 'unicorn' | 'bunny' | 'fox' | 'kitten'

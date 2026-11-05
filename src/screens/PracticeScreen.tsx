@@ -79,7 +79,7 @@ export function PracticeScreen() {
   const ready = isTestReady(progress)
 
   return (
-    <Screen className="practice" style={{ ['--land' as string]: topic.land.color, ['--land-soft' as string]: topic.land.soft }}>
+    <Screen className="practice fit" style={{ ['--land' as string]: topic.land.color, ['--land-soft' as string]: topic.land.soft }}>
       <TopBar
         back={`/topic/${topic.id}`}
         title={

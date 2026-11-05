@@ -6,7 +6,8 @@ const CREDITS: { what: string; who: string; license: string; url: string }[] = [
   { what: 'גופן Noto Sans Hebrew', who: 'Google', license: 'SIL Open Font License 1.1', url: 'https://fonts.google.com/noto/specimen/Noto+Sans+Hebrew' },
   { what: 'דמויות הנסיכה, הנסיך והחיות', who: 'ציור מקורי לאפליקציה (SVG)', license: 'MIT, כמו קוד האפליקציה', url: 'https://github.com/shba/math_2th_grade' },
   { what: 'אימוג׳י', who: 'גופן האימוג׳י של מערכת ההפעלה במכשיר (לא מצורף לאפליקציה)', license: 'לפי מערכת ההפעלה', url: 'https://unicode.org/emoji/' },
-  { what: 'זיהוי כתב יד ($P Point-Cloud Recognizer)', who: 'Vatavu, Anthony, Wobbrock (אלגוריתם; מימוש מחדש)', license: 'אלגוריתם שפורסם במאמר אקדמי; המימוש כאן מקורי (MIT)', url: 'https://depts.washington.edu/acelab/proj/dollar/pdollar.html' },
+  { what: 'זיהוי כתב יד: רשת נוירונים שאומנה לאפליקציה', who: 'נתוני אימון: MNIST (LeCun, Cortes, Burges) ו־EMNIST (Cohen ועמיתים, NIST)', license: 'MNIST: CC BY-SA 3.0; EMNIST: נתוני NIST; המודל עצמו MIT', url: 'https://www.nist.gov/itl/products-and-services/emnist-dataset' },
+  { what: 'TensorFlow.js', who: 'Google', license: 'Apache-2.0', url: 'https://github.com/tensorflow/tfjs' },
   { what: 'React, Vite, Dexie, Framer Motion, React Router', who: 'הקהילות המתחזקות', license: 'MIT / Apache-2.0', url: 'https://github.com/shba/math_2th_grade/blob/main/package.json' },
 ]
 

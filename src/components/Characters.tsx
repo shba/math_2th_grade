@@ -190,6 +190,7 @@ export function Character({ kind, mood = 'idle', size = 120, label, talkWithSpee
   return (
     <motion.svg
       viewBox="0 0 120 142"
+      className="character"
       width={size}
       height={(size * 142) / 120}
       role={label ? 'img' : undefined}

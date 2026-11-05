@@ -55,7 +55,7 @@ export function GamePlay() {
   const onEnd = (score: number, total: number, extra?: string) => setResult({ score, total, extra })
 
   return (
-    <Screen className={`game-screen game-${game.id}`}>
+    <Screen className={`game-screen fit game-${game.id}`}>
       <TopBar title={<span><span aria-hidden>{game.emoji}</span> {game.name}</span>} back={back} />
       {result ? (
         <div className="game-end">
